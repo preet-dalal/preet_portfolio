@@ -1,28 +1,19 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import LaTeXDocument from '../components/LaTeXDocument'
 import BlackHoleBackground from '../components/BlackHoleBackground'
 import type { Project } from '../types'
 
 export default function Home() {
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
-  const [mainContent, setMainContent] = useState<string>('')
 
   useEffect(() => {
     const basePath = import.meta.env.BASE_URL
-    Promise.all([
-      fetch(`${basePath}projectIndex.json`)
-        .then((res) => res.json())
-        .catch(() => []),
-      fetch(`${basePath}main.tex`)
-        .then((res) => res.text())
-        .catch(() => ''),
-    ])
-      .then(([projectsData, mainTexData]) => {
+    fetch(`${basePath}projectIndex.json`)
+      .then((res) => res.json())
+      .then((projectsData) => {
         setProjects(Array.isArray(projectsData) ? projectsData : [])
-        setMainContent(mainTexData || '')
         setLoading(false)
       })
       .catch((err) => {
@@ -182,7 +173,7 @@ export default function Home() {
                       <div className="glass-card group cursor-pointer h-full overflow-hidden flex flex-col shadow-2xl hover:shadow-orange-500/20 transition-all duration-300">
                         <div className="relative overflow-hidden bg-cosmic-800 aspect-video">
                           <img
-                            src={project.previewImage}
+                            src={`${import.meta.env.BASE_URL}${project.previewImage.replace(/^\//, '')}`}
                             alt={project.title}
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                             onError={(e) => {

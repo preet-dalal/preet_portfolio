@@ -24,7 +24,15 @@ export default function TeXRenderer({ content, images }: Props) {
   useEffect(() => {
     if (!containerRef.current) return
 
-    const rendered = parseAndRender(content, images)
+    // Prepend base URL to all image paths
+    const basePath = import.meta.env.BASE_URL
+    const processedImages: Record<string, string> = {}
+    for (const [key, value] of Object.entries(images)) {
+      // Remove leading slash and prepend base path
+      processedImages[key] = `${basePath}${value.replace(/^\//, '')}`
+    }
+
+    const rendered = parseAndRender(content, processedImages)
     containerRef.current.innerHTML = rendered
 
     const mathElements = containerRef.current.querySelectorAll('[data-math]')
