@@ -1,0 +1,195 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{geometry}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{multirow}
+\usepackage{bm}
+\geometry{margin=1in}
+
+\title{\textbf{Project 2: MCMC Fitting of the $\Lambda$CDM Model using Observational Data}}
+\author{Preet Dalal}
+\date{\today}
+
+
+\begin{document}
+\maketitle
+
+\section*{Overview}
+
+This project demonstrates a complete Bayesian inference pipeline for the standard $\Lambda$CDM cosmological model using a combination of Cosmic Chronometers (CC), Baryon Acoustic Oscillations (BAO), and the UNION3 Type Ia supernova dataset \footnote{The same method can be applied to other Type IA Supernovae datasets like Pantheon+SH0ES and DES5Y.}.
+The objective is to re--produce standard literature by statistically constraining cosmological parameters by performing a full MCMC analysis with convergence diagnostics, goodness-of-fit tests, and posterior characterization.
+
+This pipeline forms the numerical backbone of my cosmological data analysis and has been further extended to interacting dark energy models in modified $f(Q)$ gravity whose manuscript has been submitted to peer-reviewd journals for publications.
+
+\section*{$\Lambda$CDM Model}
+
+If we ignore the radiation density parameter $\Omega_{r0} \approx 8.4 \times 10^{-4}$ then our Hubble parameter is given by
+\[
+H(z) = H_0 \sqrt{\Omega_{m0}(1+z)^3 +  1 - \Omega_{m0}},
+\]
+where $\Omega_{m0}$ is the matter density parameter and $z$ is the redshift. 
+
+
+\section{Datasets}
+
+\subsection{Cosmic Chronometer (CC)}
+
+I used the latest 32 CC measurements of $H(z)$ spanning from $0.070<z< 1.965$. Out of the 32 points, 15 are correlated and the remaining 17 are uncorrelated. The $\chi^2$ statistic is given by 
+\[
+\chi^2_{\text{CC}} = 
+\sum_{i=1}^{N_u}
+\frac{\left[ H_{\text{th}}(z_i)-H_{\text{obs}}(z_i) \right]^2}{\sigma_i^2}
++
+\Delta \bm{H}^{T}\mathbf{C}_{\text{CC}}^{-1}\Delta \bm{H},
+\]
+where the first term corresponds to the uncorrelated points and the second term uses the inverse covariance matrix for the correlated subset. 
+
+
+\subsection{Baryonic Acoustic Oscillations (BAO)}
+
+In this project, I use the latest DESI DR2 BAO data that measures three ratios : $ D_M/r_s $, $ D_H/r_s $ and $ D_V/r_s $. Here, $ r_s $ is the sound horizon radius at the drag epoch $ z_d $ which depends on the speed of sound $ c_s(z) $ in the pervading fluid. 
+\[
+ r_s=\int_{z_d}^\infty\frac{c_s(z)}{H(z)} dz\;.
+\]
+   
+The transverse comoving distance, the Hubble distance and the volume-averaged distance are defined as
+\begin{gather*}
+    D_M(z) = c\int_0^z \frac{dz'}{H(z')}\;,\\
+    D_H(z) = \frac{c}{H(z)}\;,\\
+    D_V(z) = \left( zD_H(z)D_M^2(z) \right)^{1/3}\;.
+\end{gather*}
+
+The $\chi^2$ statistic for the BAO data is given as
+\[
+\chi^2_{\text{BAO}} =
+\Delta \bm{D}^{T}
+\mathbf{C}_{\text{BAO}}^{-1}
+\Delta \bm{D},
+\]
+where $\Delta D$ is the residual vector and $C^{-1}_{\rm BAO}$ is the inverse of covariance matrix. 
+
+\subsection{Type Ia Supernovae}
+
+Type Ia supernovae (SNeIa) serve as standard candles, allowing the deduction of luminosity distance $d_L(z) = (1+z)D_M(z)$ through the observed distance modulus $ \mu = m - M $, where $ m \text{ and } M $ are the apparent magnitude and the absolute magnitude. The theoretical distance modulus is given by given by
+\begin{equation*}
+    \mu(z) = 5\log_{10}\left( \frac{d_L(z)}{1\text{ Mpc}} \right)+25\;.
+\end{equation*}
+I have used the UNION3 SNe Ia dataset to constrain the parameter space. Union 3 is a dataset consisting of 22 points, which is a compressed version of the compilation of 2087. The redshift range for this dataset is $ 0.01 < z < 2.3 $.
+
+
+The $\chi^2$ statistic for the UNION3 data is given as
+\[
+\chi^2_{\text{SN}} =
+\Delta \bm{\mu}^{T}
+\mathbf{C}_{\text{SN}}^{-1}
+\Delta \bm{\mu},
+\]
+where $\Delta \mu$ is the residual vector and $C^{-1}_{\rm SN}$ is the inverse of covariance matrix. 
+
+\section*{Likelihood Construction}
+
+
+I perform Bayesian parameter estimation using Markov Chain Monte Carlo (MCMC)  methods implemented in the \texttt{emcee} sampler. The posterior distribution of the model parameters denoted collectively by $ \theta $ is sampled according to the Bayes theorem
+\begin{equation*}
+    \mathcal{P}(\theta | \text{data}) \propto \mathcal{L}(\text{data} | \theta)\,\pi(\theta)\;,
+\end{equation*}
+where $ \mathcal{L} $ is the likelihood and $ \pi(\theta) $ the prior. The likelihood is constructed from the $\chi^{2}$ statistic,
+\begin{equation*}
+    \mathcal{L}(\text{data} \mid \theta) \propto \exp\left(-\frac{1}{2}\chi^{2}(\theta)\right)\;,
+\end{equation*}
+
+where the total chi-square is 
+\[
+\chi^2 =
+\chi^2_{\text{CC}} +
+\chi^2_{\text{BAO}} +
+\chi^2_{\text{SN}}
+.
+\]
+We adopt Gaussian priors from the observational constraints:
+\begin{gather*}
+    H_{0} \sim \mathcal{N}(70,\,5^{2}) \quad;\quad 50.0 < H_{0} < 90.0 \\
+    \Omega_{m0} \sim \mathcal{N}(0.3,\,0.05^{2}) \quad;\quad 0.0 < \Omega_{m0} < 0.5\\
+\end{gather*}
+
+\section*{MCMC Pipeline}
+
+
+- Definition of parameter vector $\bm{\theta} = (H_0, \Omega_{m0})$. \\
+- Construction of CC, BAO, and UNION3 likelihoods. \\
+Implementation of $\ln \mathcal{L}$, $\ln \pi$, and $\ln \mathcal{P}$. \\
+- Sampling using \texttt{emcee}. \\
+- Burn-in removal and chain thinning.
+- Convergence diagnostics: Gelman--Rubin $\hat{R}$, autocorrelation time. \\
+- Posterior visualization and statistics.
+
+
+
+\section*{Trace Plots}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{Project-2/LCDM_UNION3_trace.jpeg}
+\caption{Trace plots showing the evolution of MCMC chains for $\Lambda$CDM parameters, demonstrating convergence and good mixing.}
+\end{figure}
+
+
+\section*{Autocorrelation Time and Effective Sample Size}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{0.48\textwidth}
+  \includegraphics[width=\textwidth]{Project-2/running_tau.jpeg}
+  \caption{Autocorrelation time.}
+\end{subfigure}
+\hfill
+\begin{subfigure}{0.48\textwidth}
+  \includegraphics[width=\textwidth]{Project-2/running_ess.jpeg}
+  \caption{Effective sample size.}
+\end{subfigure}
+\caption{Autocorrelation and effective sample size diagnostics for the MCMC chains.}
+\end{figure}
+
+
+
+\section*{Corner Plot}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.48\textwidth]{Project-2/LCDM_UNION3_Corner.jpeg}
+\caption{Corner plot showing posterior distributions and parameter correlations for $\Lambda$CDM using CC + BAO + UNION3 data. The $\chi^2_{\rm min}$ of the run is found to be 68.22 and hence the reduced $\chi^2_{ \rm min}$ of the fit is 1.18. 
+}
+\end{figure}
+
+
+\section*{Correlation Matrix}
+
+
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.6\textwidth]{Project-2/LCDM_UNION3_correlation_matrix.jpeg}
+\caption{Correlation matrix of the $\Lambda$CDM parameters derived from posterior samples.}
+\end{figure}
+
+
+
+
+\section*{Summary}
+
+
+- Full Bayesian inference pipeline implemented. \\
+- Multiple datasets combined consistently. \\
+- Convergence, autocorrelation, ESS, and $\hat{R}$ verified. \\
+- Goodness-of-fit quantified via $\chi^2$. \\
+- Correlations and degeneracies explicitly analyzed. \\
+- Framework extended to interacting dark energy in $f(Q)$ gravity. 
+
+\vspace{0.3cm}
+
+\end{document}

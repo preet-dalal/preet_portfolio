@@ -1,0 +1,128 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-cosmic-900 text-white;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
+
+.katex-display {
+  @apply my-4 overflow-x-auto;
+}
+
+.katex {
+  @apply text-base;
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, #fb923c 0%, #dc2626 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.glass-card {
+  @apply bg-black/40 backdrop-blur-md border border-white/10 rounded-xl;
+}
+
+.prose-tex {
+  @apply space-y-4 text-gray-100;
+}
+
+.prose-tex h1,
+.prose-tex h2,
+.prose-tex h3 {
+  @apply text-white font-bold mt-6 mb-3;
+}
+
+.prose-tex h1 {
+  @apply text-4xl;
+}
+
+.prose-tex h2 {
+  @apply text-2xl;
+}
+
+.prose-tex h3 {
+  @apply text-xl;
+}
+
+.prose-tex p {
+  @apply leading-relaxed;
+}
+
+.prose-tex ul,
+.prose-tex ol {
+  @apply ml-6 space-y-2;
+}
+
+.prose-tex li {
+  @apply list-disc;
+}
+
+.prose-tex img {
+  @apply max-w-full h-auto rounded-lg my-4;
+}
+
+* {
+  @apply transition-colors duration-200;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-cosmic-800;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-orange-500/50 rounded hover:bg-orange-500;
+}
+
+/* Code blocks */
+code {
+  @apply font-mono text-sm;
+}
+
+pre {
+  @apply bg-cosmic-800 p-4 rounded-lg overflow-x-auto;
+}
+
+/* Tables */
+table {
+  @apply w-full border-collapse;
+}
+
+th, td {
+  @apply border border-white/10 px-4 py-2 text-left;
+}
+
+th {
+  @apply bg-cosmic-800 font-semibold text-orange-400;
+}
+
+/* Blockquotes */
+blockquote {
+  @apply border-l-4 border-orange-500 pl-4 italic text-gray-300 my-4;
+}
+
+/* Images */
+img {
+  @apply rounded-lg;
+}
+
+/* Links */
+a {
+  @apply text-orange-500 hover:text-orange-400 transition-colors;
+}
+
+.prose-tex a {
+  @apply underline hover:no-underline;
+}

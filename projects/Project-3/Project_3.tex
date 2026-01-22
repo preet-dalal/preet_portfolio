@@ -1,0 +1,176 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{caption}
+\geometry{margin=1in}
+
+\title{\textbf{Project 3: Relativistic Precession in Schwarzschild and Reissner--Nordström Spacetimes}}
+\author{Preet Dalal}
+\date{}
+
+\begin{document}
+\maketitle
+
+\vspace{-0.4cm}
+
+\section*{Overview}
+
+This project studies the relativistic perihelion precession of bound timelike orbits in the Schwarzschild (SCH) and Reissner--Nordström (RN) spacetimes.  
+It is a purely theoretical and numerical investigation aimed at understanding how strong-field gravity and the charge parameter \(Q\) modify orbital dynamics beyond the Newtonian and first post-Newtonian (1PN) limits.  
+The exact geodesic equations are integrated numerically and compared directly with analytic 1PN predictions.
+
+
+\section*{Spacetimes Considered}
+
+Schwarzschild (SCH) spacetime:
+\[
+ds^2 = -\left(1-\frac{2M}{r}\right)dt^2
++ \left(1-\frac{2M}{r}\right)^{-1}dr^2
++ r^2 d\Omega^2 .
+\]
+Reissner--Nordström (RN) spacetime:
+\[
+ds^2 = -\left(1-\frac{2M}{r}+\frac{Q^2}{r^2}\right)dt^2
++ \left(1-\frac{2M}{r}+\frac{Q^2}{r^2}\right)^{-1}dr^2
++ r^2 d\Omega^2 .
+\]
+Here \(M\) is the mass of the black hole and \(Q\) is its charge parameter.
+
+
+\section*{Orbit Equations}
+
+Introducing the reciprocal radial coordinate \(u = 1/r\) and using the conserved
+specific angular momentum \(h\), the exact relativistic orbit equations take the form:
+
+\subsection*{Schwarzschild (SCH)}
+
+\[
+\frac{d^{2}u}{d\phi^{2}}
+=
+-\,u
++ 3Mu^{2}
++ \frac{M}{h^{2}} .
+\]
+
+\subsection*{Reissner--Nordström (RN)}
+
+\[
+\frac{d^{2}u}{d\phi^{2}}
+=
+-\,u
++ 3Mu^{2}
++ \frac{M}{h^{2}}
+- Q^{2}\!\left(\frac{u}{h^{2}} + 2u^{3}\right).
+\]
+
+These equations are integrated numerically to obtain the exact relativistic trajectories.
+The additional \(Q\)-dependent terms in the RN case are responsible for the qualitative
+modifications of orbital dynamics and the possibility of negative precession.
+
+
+\section*{Circular Orbits and Stability}
+
+Circular orbits are characterized using the effective potential \(V_{\rm eff}(r)\). Their stability is determined by
+\[
+\frac{d^2 V_{\rm eff}}{dr^2}
+\begin{cases}
+>0 & \text{Stable},\\[4pt]
+=0 & \text{Marginally stable (ISCO)},\\[4pt]
+<0 & \text{Unstable}.
+\end{cases}
+\]
+
+For Schwarzschild spacetime,
+\[
+r_{\rm ISCO}^{\rm SCH} = 6M.
+\]
+
+For Reissner--Nordström spacetime,
+\[
+r_{\rm ISCO}^{\rm RN}
+=
+3M + \sqrt{9M^2 - 8Q^2}.
+\]
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.85\textwidth]{Project-3/circular_sch.jpeg}
+\caption{Unstable, marginally stable (ISCO), and stable circular orbits in Schwarzschild spacetime obtained from the effective potential.}
+\end{figure}
+
+---
+
+\section*{Relativistic Precession}
+
+The perihelion precession is measured numerically as
+\[
+\Delta\phi = \phi_{n+1} - \phi_n - 2\pi,
+\]
+where \(\phi_n\) and \(\phi_{n+1}\) are two successive periapsis angles extracted from the orbit.\\
+At first post-Newtonian order, the analytic expressions are:\\
+For SCH:
+\[
+\Delta\phi_{\rm SCH}
+=
+\frac{6\pi M}{a(1-e^2)},
+\]
+For RN:
+\[
+\Delta\phi_{\rm RN}
+=
+\frac{6\pi M}{a(1-e^2)}
+-
+\frac{3\pi Q^2}{a^2(1-e^2)^2},
+\]
+where \(a\) is the semi-major axis and \(e\) is the orbital eccentricity.
+
+
+\section*{Results}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.9\textwidth]{Project-3/precession_timelike.jpeg}
+\caption{Positive and negative perihelion precession in RN spacetime obtained from integrating orbit equations numerically.}
+\end{figure}
+\begin{figure}[h]
+\centering
+
+% -------- First Row --------
+\begin{minipage}[c]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{Project-3/M_phi.jpeg}
+    \caption*{(a) $\Delta\phi$ vs $M$}
+\end{minipage}
+\hfill
+\begin{minipage}[c]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{Project-3/a_phi.jpeg}
+    \caption*{(b) $\Delta\phi$ vs $a$}
+\end{minipage}
+
+\vspace{0.4cm}
+
+% -------- Second Row --------
+\begin{minipage}[c]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{Project-3/e_phi.jpeg}
+    \caption*{(c) $\Delta\phi$ vs $e$}
+\end{minipage}
+\hfill
+\begin{minipage}[c]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{Project-3/Q_phi.jpeg}
+    \caption*{(d) $\Delta\phi$ vs $Q/M$}
+\end{minipage}
+
+\caption{Variation of orbital precession with $M$, $a$, $e$, and $Q/M$. 
+Panels (a)--(c) show comparison with the Schwarzschild and 1PN predictions by varying one parameter at a time while keeping the others fixed. 
+Panel (d) shows the effect of the charge parameter $Q$, including the transition from positive to negative precession for a fixed choice of $M,a$ and $e$.}
+\label{fig:precession_2x2}
+
+\end{figure}
+
+
+\end{document}

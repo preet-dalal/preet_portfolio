@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 500">
+  <rect fill="#0a0e27" width="700" height="500"/>
+  <g stroke="#dc2626" stroke-width="2" fill="none">
+    <ellipse cx="350" cy="250" rx="175" ry="115"/>
+    <path d="M 175 250 Q 205 205 350 185 Q 495 175 520 245 Q 510 315 350 325 Q 185 335 175 250" stroke="#dc2626" stroke-width="2"/>
+  </g>
+  <circle cx="350" cy="250" r="8" fill="#dc2626"/>
+  <circle cx="210" cy="210" r="3" fill="#ef5350"/>
+  <circle cx="260" cy="180" r="3" fill="#ef5350"/>
+  <circle cx="310" cy="170" r="3" fill="#ef5350"/>
+  <circle cx="410" cy="180" r="3" fill="#ef5350"/>
+  <circle cx="470" cy="230" r="3" fill="#ef5350"/>
+  <circle cx="510" cy="290" r="3" fill="#ef5350"/>
+  <text x="350" y="420" font-size="14" fill="#999" text-anchor="middle" font-family="Arial">Best-fit S2 Orbit in Schwarzschild Spacetime</text>
+</svg>

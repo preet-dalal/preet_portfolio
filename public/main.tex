@@ -1,0 +1,315 @@
+\documentclass[a4paper,11pt]{article}
+
+%--- Packages ---
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage{amsmath, amssymb, amsfonts}
+\usepackage{physics}      % For easy derivatives and bra-ket notation
+\usepackage{graphicx}     % For including figures
+\usepackage{hyperref}     % For hyperlinks in PDF
+\usepackage{natbib}       % For bibliography (optional)
+
+%--- Title & Author ---
+\title{Cosmological Parameter Estimation with \texorpdfstring{$\Lambda$}{L}CDM and CPL Models}
+\author{Cosmology Project}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+This project implements a full Bayesian parameter-estimation pipeline for two cosmological expansion models: the standard $\Lambda$CDM model and the Chevallier–Polarski–Linder (CPL) dark-energy parametrization. The goal is to demonstrate practical expertise in cosmological modelling, Markov Chain Monte Carlo (MCMC) methods, likelihood construction, and statistical inference using observational Hubble data (OHD) to reproduce results from standard literature.
+\end{abstract}
+
+\section{Theoretical Framework}
+
+\subsection{General Relativity Background}
+We begin with the Einstein-Hilbert action in natural units ($c=8\pi G=1$):
+\begin{equation}
+    S = \int d^4x \sqrt{-g} \left( \frac{R}{2} + \mathcal{L}_m \right),
+    \label{eq:EH_action}
+\end{equation}
+where $R$ is the Ricci scalar, $g$ is the determinant of the metric tensor, and $\mathcal{L}_m$ represents the matter Lagrangian. Varying this action with respect to the metric yields the Einstein Field Equations:
+\begin{equation}
+    R_{\mu\nu} - \frac{1}{2}R g_{\mu\nu} -\Lambda g_{\mu\nu}=  T_{\mu\nu}.
+    \label{eq:field}
+\end{equation}
+
+
+\subsection{FLRW Metric and Friedmann Equations}
+Assuming the Cosmological Principle (homogeneity and isotropy), the spacetime is described by the Friedmann-Lemaître-Robertson-Walker (FLRW) metric:
+\begin{equation}
+    ds^2 = -dt^2 + a^2(t)\left[ \frac{dr^2}{1-kr^2} + r^2 d\Omega^2 \right], 
+\end{equation}
+where $a(t)$ is the scale factor and $k$ represents the curvature. For this analysis, we assume a spatially flat universe ($k=0$), simplifying the line element to:
+\begin{equation}
+    ds^2 = -dt^2 + a^2(t) d\vec{x}^2.
+\end{equation}
+Using this metric in Eq.~\eqref{eq:field}, we derive the first Friedmann equation:
+\begin{equation}
+    3H^2 =  \sum_i \rho_i \equiv \rho_m + \rho_r + \rho_{de},
+\end{equation}
+where $H \equiv \dot{a}/a$ is the Hubble parameter, and $\rho_m, \rho_r, \rho_{de}$ denote the energy densities of matter, radiation, and dark energy, respectively. The second Friedmann equation (Raychaudhuri equation) is:
+\begin{equation}
+     3H^2 + 2\dot{H} = - \sum_i p_i = -(p_r + p_{de}), \label{friedmannp}
+\end{equation}
+where we assume matter is pressureless dust ($p_m = 0$).
+
+\subsection{Continuity Equations}
+The conservation of energy-momentum ($\nabla_\mu T^{\mu\nu} = 0$) leads to the continuity equations. For non-interacting components:
+\begin{align}
+    \dot{\rho}_m + 3H\rho_m &= 0, \\
+    \dot{\rho}_r + 4H\rho_r &= 0, \\
+    \dot{\rho}_{de} + 3H(\rho_{de} + p_{de}) &= 0.
+\end{align}
+Integrating these yields $\rho_m \propto a^{-3}$ and $\rho_r \propto a^{-4}$. The evolution of $\rho_{de}$ depends on its equation of state $w = p_{de}/\rho_{de}$.
+
+\section{Cosmological Models}
+
+\subsection{Standard \texorpdfstring{$\Lambda$}{L}CDM Model}
+In the standard $\Lambda$CDM model, dark energy is a cosmological constant with $w = -1$, implying $\rho_{de} = \text{const}$. The Hubble parameter evolution is given by:
+\begin{equation}
+    H(z) = H_0 \sqrt{ \Omega_{m0} (1+z)^3 + \Omega_{r0}(1+z)^4 + \Omega_{\Lambda 0} },
+\end{equation}
+where $z = \frac{1}{1+a}$ is the redshift parameter and $\Omega_{i0}$ denote the present day value ($z=0$) for the $i^{th}$ density parameter defined by $\Omega_i = \frac{\rho_i}{3H^2}$.
+For late-time cosmology (ignoring radiation as $\Omega_{r0} \approx 10^{-5}$) in a flat universe ($\Omega_{m0} + \Omega_{\Lambda 0} = 1$), this simplifies to:
+\begin{equation}
+    H(z) = H_0 \sqrt{ \Omega_{m0}(1+z)^3 + (1 - \Omega_{m0}) }.
+\end{equation}
+The free parameters for estimation are $\theta_{\Lambda{\rm CDM}} = \{ H_0, \Omega_{m0} \}$.
+
+\subsection{CPL Parametrization}
+To explore dynamical dark energy, we utilize the Chevallier–Polarski–Linder (CPL) parametrization for the equation of state:
+\begin{equation}
+    w(a) = w_0 + w_a (1 - a) = w_0 + w_a \left( \frac{z}{1+z} \right).
+\end{equation}
+The density evolution is found by integrating the continuity equation:
+\begin{equation}
+    \rho_{de}(a) = \rho_{de,0} \exp\left[ -3 \int_{1}^{a} \frac{1+w(a')}{a'} da' \right].
+\end{equation}
+Substituting the CPL form and integrating yields:
+\begin{equation}
+    \rho_{de}(z) = \rho_{de,0} (1+z)^{3(1+w_0+w_a)} \exp\left( -\frac{3 w_a z}{1+z} \right).
+\end{equation}
+The resulting Hubble evolution equation is:
+\begin{equation}
+     {H(z)} = {H_0}\sqrt{ \Omega_{m0} (1+z)^3 + (1-\Omega_{m0}) (1+z)^{3(1+w_0+w_a)} \exp\!\left(-\frac{3 w_a z}{1+z}\right) }.
+\end{equation}
+The parameter set for this model is $\theta_{\rm CPL} = \{ H_0, \Omega_{m0}, w_0, w_a \}$.
+
+
+\section{Data and Methodology}
+\subsection{Data and Likelihood function}
+To robustly constrain the expansion history and address the Hubble tension, this project utilizes a combination of late-time cosmological probes. I analyze two distinct dataset combinations to check for systematic consistency in Type Ia Supernovae (SNeIa) samples:
+\begin{enumerate}
+    \item Cosmic Chronometer + DESI DR2 BAO + Pantheon+SH0ES
+    \item Cosmic Chronometer + DESI DR2 BAO + UNION3 
+\end{enumerate}
+From hereafter, I name these two different combination datasets as D1 and D2 respectively. 
+The likelihood function is defined as:
+\begin{equation}
+    \mathcal{L_{\rm{total}}}(\rm{data} | \theta) \propto \rm{exp}\left(-\frac{\chi^2_{\rm{total}}}{2}\right)
+    \label{likelihood}
+\end{equation}
+Assuming the datasets are statistically independent, the total likelihood is the product of individual contributors and thus,
+\begin{equation}
+    \ln \mathcal{L}_{\rm tot} = \ln \mathcal{L}_{\rm CC} + \ln \mathcal{L}_{\rm BAO} + \ln \mathcal{L}_{\rm SN}.
+\end{equation}
+This corresponds to minimizing the total $\chi^2$:
+\begin{equation}
+    \chi^2_{\rm tot}(\theta) = \chi^2_{\rm CC} + \chi^2_{\rm BAO} + \chi^2_{\rm SN}.
+\end{equation}
+
+\subsubsection{Cosmic Chronometer (CC)}
+This analysis uses the 31 points uncorrelated $H(z)$ \textbf{footnote:github} measurements of Cosmic Chronometers (CC). The redshift range for this data set lies in the interval $0.07 < z < 1.965 $. The data set is used from the study of \textbf{cite: cc paper}. Since we are using the uncorrelated errors, the $\chi^2$ is given by, 
+\begin{equation}
+    \chi^2_{\rm CC} = \sum_{i} \frac{\left[ H_{\rm th}(z_i|\theta) - H_{\rm obs}(z_i) \right]^2}{\sigma_{H,i}^2}.
+\end{equation}
+
+%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Baryon Acoustic Oscillations (BAO)}
+The Baryon Acoustic Oscillation (BAO) data set employed here utilizes the most recent DESI DR2 release \cite{DESI:2025zgx}\footnote{\texttt{\url{https://github.com/CobayaSampler/bao\_data/blob/master/README.md}}}, which provides measurements for three primary distance ratios: $ D_M/r_d $, $ D_H/r_d $ and $ D_V/r_d $. The sound horizon radius, $ r_d $, corresponding to the drag epoch $ z_d $, is a critical component defined by the integration of the speed of sound $ c_s(z) $ in the fluid, as follows:
+\begin{equation}
+    r_d=\int_{z_d}^\infty\frac{c_s(z)}{H(z)} dz\;.
+\end{equation}
+The key cosmological distance measures, specifically the transverse comoving distance $D_M(z)$, the Hubble distance $D_H(z)$, and the volume-averaged distance $D_V(z)$, are defined as:
+\begin{gather}
+    D_M(z) = c\int_0^z \frac{dz'}{H(z')}\;,\\
+    D_H(z) = \frac{c}{H(z)}\;,\\
+    D_V(z) = \left( zD_H(z)D_M^2(z) \right)^{1/3}\;.
+\end{gather}
+From here onwards all the datsets used have correlated errors and hence, we must find the inverse covariance matrix. The $\chi^2$ is thus,
+\begin{equation}
+    \chi^2_{\rm BAO} = (\mathbf{d}_{\rm obs} - \mathbf{d}_{\rm th})^T \mathbf{C}_{\rm BAO}^{-1} (\mathbf{d}_{\rm obs} - \mathbf{d}_{\rm th}),
+\end{equation}
+where $\mathbf{d}$ represents the vector of distance ratios and $\mathbf{C}_{\rm BAO}$ is the covariance matrix.
+
+
+%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Type-Ia Supernovae Dataset}
+As reliable standard candles, Type Ia supernovae (SNeIa) facilitate the determination of the luminosity distance $d_L(z) = (1+z)D_M(z)$ via the observed distance modulus $ \mu = m - M $. Here, $ m $ represents the apparent magnitude and $ M $ is the absolute magnitude. The theoretical expression for the distance modulus is given by
+\begin{equation}
+    \mu(z) = 5\log_{10}\left( \frac{d_L(z)}{1\text{ Mpc}} \right)+25\;.
+\end{equation}
+
+
+Two distinct SNe Ia datasets are employed to constrain the parameter space: the Pantheon+SH0ES compilation \cite{Brout:2022vxf, Scolnic:2021amr, Riess:2021jrx} and the Union3 dataset \cite{Rubin:2023jdq}. The Pantheon+SH0ES (PP) compilation consists of 1701 data points spanning a redshift range of $ 0.001<z<2.213 $\footnote{\texttt{\url{https://github.com/PantheonPlusSH0ES}}}. The Union 3 (U3) dataset is a compressed sample comprising 22 points, derived from a larger compilation of 2087 SNe Ia. This dataset covers a redshift range of $ 0.01 < z < 2.3 $\footnote{\texttt{\url{https://github.com/CobayaSampler/sn\_data/tree/master/Union3}}}. The chi-squared is calculated as,
+
+\begin{equation}
+    \chi^2_{\rm SN} = (\mathbf{\mu}_{\rm obs} - \mathbf{\mu}_{\rm th})^T \mathbf{C}_{\rm SN}^{-1} (\mathbf{\mu}_{\rm obs} - \mathbf{\mu}_{\rm th}).
+\end{equation}
+
+
+%%%%%%%%%%%%%%%%%%%%%%
+\subsection{MCMC Methodology and Diagnostics}
+Bayesian inference is conducted using the Markov Chain Monte Carlo (MCMC) technique, as implemented in the \texttt{emcee} sampler \cite{Foreman_Mackey_2013}. The posterior probability distribution $\mathcal{P}$ of the model parameters, collectively denoted by $ \theta $, is sampled according to Bayes' theorem:
+\begin{equation}
+    \mathcal{P}(\theta | \text{data}) \propto \mathcal{L}(\text{data} | \theta)\,\pi(\theta)\;,
+\end{equation}
+where $ \mathcal{L} $ is the likelihood function and $ \pi(\theta) $ is the prior distribution for the parameters. The likelihood is related to the $\chi^{2}$ statistic through \eqref{likelihood}
+
+The analysis focuses on two major cosmological frameworks: the standard $\Lambda$CDM model, characterized by a constant dark energy equation of state $w=-1$, and the dynamic dark energy CPL (Chevallier-Polarski-Linder) parameterization, where the equation of state evolves as $w(z) = w_0 + w_a z/(1+z)$.
+
+For the fundamental parameters $H_0$ and $\Omega_{m0}$ in both models, we adopt the following Gaussian prior distributions:
+\begin{gather}
+    H_{0} \sim \mathcal{N}(70,\,5^{2}) \quad;\quad 60.0 < H_{0} < 80.0 \\
+    \Omega_{m0} \sim \mathcal{N}(0.3,\,0.05^{2}) \quad;\quad 0.1 < \Omega_{m0} < 0.5\\
+\end{gather}
+The CPL model introduces two additional parameters, $w_0$ and $w_a$. We define broad, flat priors for these dark energy equation of state parameters as follows:
+\begin{gather}
+    w_0 \sim \mathcal{U}(-2.5,\, 0) \\
+    w_a \sim \mathcal{U}(-2.5,\, 2.5)
+\end{gather}
+
+Chain convergence is confirmed by ensuring the Gelman-Rubin statistic satisfies $ \hat{R}<1.01 $. The resultant posterior distributions are visualized using the \texttt{GetDist} package \cite{Lewis:2019xzd}. Model comparison against $\Lambda$CDM is performed statistically using the Akaike Information Criterion (AIC).  With $ \chi^2_{min} $ denoting the minimum $\chi^2$ value for a specific dataset combination, the AIC is calculated as,
+\begin{equation}
+     AIC = \chi^2_{min} + 2k\;.   
+\end{equation}
+Here, $ k $ is the total number of free parameters in the model ($k=2$ for $\Lambda$CDM and $k=4$ for CPL).
+
+
+\section{NkS}
+
+
+\subsection{Naked Singularities}
+\label{sec:NkS}
+
+Naked singularities (NkS) are gravitational configurations where the central curvature singularity is not enclosed by an event horizon, thus violating the cosmic censorship conjecture. While their physical realization remains uncertain, these models are important both theoretically and observationally, as they can serve as test cases for identifying signatures that distinguish black holes from horizonless compact objects.
+
+\item \textbf{Null Naked Singularity (NNS) spacetime:}  
+The null naked singularity solution \cite{Joshi:2020tlq} represents a static, spherically symmetric geometry in which the central curvature singularity is not hidden behind an event horizon. The metric takes the form
+\begin{eqnarray}
+    f(r) &=& \left(1+\frac{M}{r}\right)^{-2}, \\
+    g(r) &=& \left(1+\frac{M}{r}\right)^{2}, \\
+    R(r) &=& r^{2}.
+\end{eqnarray}
+
+where $M$ denotes the ADM mass. The metric function can be expressed as $f(r) = (1 + M/r)^{-2}$, which in the large-$r$ limit expands as $f(r) \approx 1 - 2M/r + 3(M/r)^2 + \dots$, indicating that the spacetime is asymptotically flat and Schwarzschild-like at infinity. However, near $r = 0$, the causal structure differs fundamentally: curvature invariants such as the Kretschmann and Ricci scalars diverge, yet no null hypersurface encloses the singularity, rendering it visible to distant observers.
+
+The Penrose diagram reveals that null geodesics from past null infinity can emerge from the singularity, although photons undergo infinite redshift relative to asymptotic observers \cite{Bambhaniya:2021jum}. Thus, the singularity is null in nature and globally naked.
+
+From the Einstein field equations, the effective energy density and pressures for this geometry are
+\begin{eqnarray}
+\rho &=& \frac{M^2(M + 3r)}{\kappa r^2 (M + r)^3}, \qquad \\
+p_r &=& -\rho, \qquad \\
+p_\theta &=& p_\phi = \frac{3M^2}{\kappa r^4}\left(1+\frac{M}{r}\right)^{-4}.
+\end{eqnarray}
+All standard energy conditions (weak, null, and strong) are satisfied. The matter source corresponds to an anisotropic fluid with
+\begin{equation}
+    p_r - p_\theta = -\frac{M^2(M^2 + 4Mr + 6r^2)}{\kappa r^2 (M + r)^4},
+\end{equation}
+and an effective equation-of-state parameter
+\begin{equation}
+    \alpha = \frac{2p_\theta + p_r}{3\rho} = \frac{2}{\left(3+\frac{M}{r}\right)\left(1+\frac{M}{r}\right)} - \frac{1}{3}.
+\end{equation}
+The parameter $\alpha$ tends to $-1/3$ near the singularity ($r \to 0$) and approaches $+1/3$ asymptotically ($r \to \infty$). Hence, this geometry can be interpreted as being sourced by an anisotropic fluid that transitions from a negative-pressure core to a radiation-like regime at large radii. The NNS spacetime therefore provides a physically consistent, horizonless solution of Einstein’s equations—an analytically tractable model for studying visible curvature singularities and their observational signatures.
+
+  \item \textbf{Joshi--Malafarina--Narayan (JMN-1) spacetime:}
+
+The Joshi--Malafarina--Narayan (JMN-1) solution represents a static, spherically symmetric configuration that can arise as the end state of gravitational collapse of an anisotropic fluid cloud in general relativity. The interior matter distribution satisfies the standard energy conditions, characterized by vanishing radial pressure ($p_r = 0$) and non-zero tangential pressure ($p_t \neq 0$). This ensures a physically consistent model without invoking exotic matter components.
+
+The interior line element for $r \leq r_b$ takes the form
+\begin{eqnarray}
+    f(r) &=& (1 - M_0) \left( \frac{r}{r_b} \right)^{\frac{M_0}{1 - M_0}}, \\
+    g(r) &=& (1 - M_0)^{-1}, \\
+    R(r) &=& r,
+    \label{jmn_metric}
+\end{eqnarray}
+where $M_0$ is a dimensionless compactness parameter that quantifies the degree of gravitational binding within the matter cloud. The interior geometry is smoothly matched at $r = r_b$ to an exterior Schwarzschild spacetime of total mass $M$, following the standard Darmois–Israel junction conditions. The two regions are related through the condition
+\begin{equation}
+    r_b M_0 = 2M \, ,
+\end{equation}
+which ensures the continuity of the metric and its first derivatives across the boundary.
+
+The parameter $M_0$ crucially determines the causal structure of the spacetime. For $0 < M_0 < 0.8$, the model remains physically viable with subluminal sound speeds and satisfies the weak and dominant energy conditions. In this range, the spacetime admits a central curvature singularity at $r = 0$, which is not hidden behind an event horizon, thereby leading to a naked singularity configuration. For smaller $M_0$, the geometry approaches the Minkowski limit, while larger values yield increasingly compact configurations that asymptotically approach black hole formation.
+
+The exterior region ($r > r_b$) corresponds to a Schwarzschild geometry of mass $M$; however, due to the absence of an event horizon at $r = 2M$, the spacetime remains globally regular outside the matching radius. This feature is particularly relevant for modeling astrophysical systems such as the orbits of S-stars around the Galactic Center, where the observed trajectories of stars like S2 lie entirely outside the matching radius $r_b$. Hence, the stellar motion effectively probes the exterior Schwarzschild region of the JMN-1 spacetime but in a configuration without an event horizon, providing a direct and physically motivated context to test horizonless compact objects observationally.
+
+The JMN-1 model, therefore, offers a theoretically consistent and astrophysically relevant framework to study naked singularities that emerge from realistic gravitational collapse, while naturally connecting to observable phenomena such as stellar dynamics, accretion flow signatures, and shadow morphology in the vicinity of supermassive compact objects.
+
+
+\item \textbf{Janis--Newman--Winicour (JNW) spacetime:}
+
+The Janis--Newman--Winicour (JNW) solution represents a static, spherically symmetric spacetime sourced by a massless scalar field minimally coupled to gravity. It is an exact solution of the Einstein--Klein--Gordon equations and can be viewed as the most general scalar-field extension of the Schwarzschild geometry. The corresponding line element takes the form
+\begin{eqnarray}
+    f(r) &=& \left(1 - \frac{b}{r}\right)^{\nu}, \\
+    g(r) &=& \left(1 - \frac{b}{r}\right)^{-\nu}, \\
+    R(r) &=& r \left(1 - \frac{b}{r}\right)^{(1-\nu)/2},
+    \label{jnw_metric}
+\end{eqnarray}
+where the constants $M$ and $q_s$ denote, respectively, the ADM mass and the scalar charge of the configuration. These parameters are related through
+\begin{equation}
+    b = 2\sqrt{M^2 + q_s^2}, \qquad 
+    \nu = \frac{2M}{b} = \frac{1}{\sqrt{1 + (q_s/M)^2}} \, .
+\end{equation}
+The spacetime exhibits a curvature singularity at $r = b$, which is not shielded by any event horizon. Therefore, for any nonzero scalar charge ($q_s \neq 0$), the singularity is naked. In the limit $q_s \rightarrow 0$ (or equivalently $\nu \rightarrow 1$), the solution smoothly reduces to the Schwarzschild metric, restoring the standard black hole geometry.
+
+A distinctive feature of the JNW spacetime is that the coordinate $r$ does not coincide with the areal radius, since $R^2(r) \neq r^2$. The true areal radius is determined by
+\begin{equation}
+    R_{\text{areal}}(r) = r \left(1 - \frac{b}{r}\right)^{(1-\nu)/2},
+\end{equation}
+which introduces significant geometric deviations from Schwarzschild near the central region. The parameter $\nu$ controls the degree of deviation: smaller $\nu$ (or larger scalar charge) leads to stronger curvature and more prominent naked singularity features.
+
+Physically, the JNW geometry interpolates between flat space and the Schwarzschild black hole through the scalar charge $q_s$. It provides a minimal model of a scalar-field–supported compact object without horizons. Owing to its analytical simplicity, it has been widely studied as a benchmark for testing the cosmic censorship conjecture and for exploring observational distinctions between naked singularities and black holes. Recent investigations have examined its implications for gravitational lensing, photon trajectories, accretion disk dynamics, and shadow morphology, revealing characteristic signatures that may help identify horizonless compact objects in astrophysical observations.
+
+
+
+\section{Discussion and Conclusion}
+
+In this work, we numerically solved the timelike geodesic of S2 star around Sg A* and studied different spacetime models. We tried to constrain the charge-like parameter $q$ by performing Bayesian statistics namely MCMC and combined the data set from \textbf{KECK + VLT} from 1992 to 2016 and \textbf{KECK} from 2016-2019. We find that all the chains for all the parameters for all the models have converged by confirming the Gelmann Rubin number $\hat R < 1.01$ \textit{Mass and distance}. 
+
+Statistically, we find that the best fit model is the SCH metric with a reduced $\chi^2_r$ of 1.421 but previous studies from the combined astrometric positions of S2 star from the KECK + VLT and the Subaru telescope \textbf{cite: subaru} suggest that the spacetime metric of Sg A* might not be Schwarzchild due to the possibility of gravitational lensing effect. Our results shows that apart from Schwarzchild model, SVBH model is by far the best fitted along with RN and JNW as they have reduced $\chi^2_r$ of 1.421, 1.424, 1.425 respectively. The AIC and BIC information criterion suggests that all these models are in weak evidence in comparision to Schwarzschild model. However, other non singular blackhole models such as BBH and HBH are strongly disfavored as   compared to Schwarzchild model as they have very high AIC and BIC values. Another study of S2 stat on non singular models by \cite{riccardo, nonsingular} suggests that these models are not excluded from this observation. 
+
+
+\begin{table*}[h]
+    \centering
+    \small
+    \renewcommand{\arraystretch}{1.1}
+    \setlength{\tabcolsep}{6pt}
+    \caption{Upper bound on q/M}
+    \begin{tabular}{|c|c|}
+        \toprule
+        \hline
+        \hline
+        \textbf{Model} 
+        & \textbf{Upper bound on $\frac{q}{M}$} 
+        \\
+        \midrule
+        \hline
+         RN &  & \\
+         BBH & & \\
+         HBH & & \\
+         SVBH & & \\ 
+         JNW & & \\
+        \bottomrule
+        
+        \hline
+    \end{tabular}
+    \label{tab:prior}
+\end{table*}
+
+
+
+\end{document}
